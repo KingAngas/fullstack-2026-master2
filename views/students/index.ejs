@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des Etudiants</title>
+ <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+
+<h1>Gestion des Etudiants</h1>
+
+
+<form id="item-form">
+  <input type="hidden" id="item-id" />
+
+
+  <label for="name">Nom</label>
+  <input id="name" placeholder="Nom" required />
+
+
+  <label for="prenom">Prénom</label>
+  <input id="prenom" placeholder="Prénom" required />
+
+
+  <div style="display: flex; gap: 10px;">
+    <button type="submit">Enregistrer</button>
+    <button type="button" onclick="resetForm()">Annuler</button>
+  </div>
+</form>
+
+
+<table>
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="items-table"></tbody>
+</table>
+
+
+<script>
+  let items = <%- JSON.stringify(items) %>;
+
+
+  const table = document.getElementById("items-table");
+  const form = document.getElementById("item-form");
+  const idInput = document.getElementById("item-id");
+  const nameInput = document.getElementById("name");
+  const prenomInput = document.getElementById("prenom");
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+
+  function render() {
+    table.innerHTML = items.map(item => `
+      <tr data-id="${item.id}">
+        <td>${item.name}</td>
+        <td>${item.prenom}</td>
+        <td>
+          <button class="edit">✏️</button>
+          <button class="delete">🗑</button>
+        </td>
+      </tr>
+    `).join("");
+    checkForm();
+  }
+
+
+  function resetForm() {
+    idInput.value = "";
+    form.reset();
+    checkForm();
+  }
+
+
+  function editItem(id) {
+    const item = items.find(i => i.id === id);
+    idInput.value = item.id;
+    nameInput.value = item.name;
+    prenomInput.value = item.prenom;
+    checkForm();
+  }
+
+
+  function checkForm() {
+    submitBtn.disabled = !nameInput.value || !prenomInput.value;
+  }
+
+
+  form.addEventListener("input", checkForm);
+
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const payload = { name: nameInput.value, prenom: prenomInput.value };
+
+
+    if (idInput.value) {
+      const res = await fetch(`/students/api/${idInput.value}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const updated = await res.json();
+      items = items.map(i => i.id === updated.id ? updated : i);
+    } else {
+      const res = await fetch("/students/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const created = await res.json();
+      items = items.concat(created);
+    }
+
+
+    resetForm();
+    render();
+  };
+
+
+  async function deleteItem(id) {
+    await fetch(`/students/api/${id}`, { method: "DELETE" });
+    items = items.filter(i => i.id !== id);
+    render();
+  }
+
+
+  table.onclick = (e) => {
+    const row = e.target.closest("tr");
+    if (!row) return;
+    const id = row.dataset.id;
+
+
+    if (e.target.classList.contains("edit")) editItem(id);
+    if (e.target.classList.contains("delete")) deleteItem(id);
+  };
+
+
+  render();
+</script>
+
+
+</body>
+</html>
