@@ -1,7 +1,7 @@
 {
   "name": "fullstack-2026-master2",
   "version": "1.2.0",
-  "description": "Backend &amp; Frontend for academic purpose",
+  "description": "Backend and Frontend for academic purpose",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",

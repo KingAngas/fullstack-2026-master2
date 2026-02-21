@@ -24,6 +24,8 @@ app.get("/up",(_,resp) =>{
   resp.json({
     name:"Gestion des Etudiants",
     health: "UP",
+    description:packaging.description,
+    stack:packaging.dependencies,
     version:packaging.version,
     build: new Date().toISOString(),
   })
